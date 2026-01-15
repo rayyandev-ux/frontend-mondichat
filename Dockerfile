@@ -18,8 +18,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma Client
-ENV DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
-RUN npx prisma generate
+RUN DATABASE_URL="postgresql://user:password@localhost:5432/dbname" npx prisma generate
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
