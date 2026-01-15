@@ -9,7 +9,7 @@ export default function Home() {
         </h1>
 
         <p className="mt-3 text-2xl text-gray-600 dark:text-gray-300">
-          Plataforma de administración y registro
+          Plataforma de administración y registro MondiChat
         </p>
 
         <div className="flex mt-6 gap-4">
