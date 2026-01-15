@@ -1,8 +1,7 @@
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 
 # Install dependencies only when needed
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat openssl
+RUN apt-get update -y && apt-get install -y openssl
 
 FROM base AS deps
 WORKDIR /app
@@ -18,6 +17,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma Client
+# We use a dummy DATABASE_URL because prisma generate validates the schema
+# but doesn't actually connect to the DB. The real URL is provided at runtime.
 RUN DATABASE_URL="postgresql://user:password@localhost:5432/dbname" npx prisma generate
 
 # Next.js collects completely anonymous telemetry data about general usage.
