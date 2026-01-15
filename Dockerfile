@@ -3,20 +3,15 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install system dependencies (required for some build tools)
-RUN apk add --no-cache libc6-compat openssl
+# Install dependencies required for building
+# libc6-compat is needed for Next.js on Alpine
+RUN apk add --no-cache libc6-compat
 
 # Copy package files first to leverage cache
 COPY package.json package-lock.json ./
 
 # Install dependencies (including devDependencies for building)
 RUN npm ci
-
-# Copy Prisma schema and generate client
-COPY prisma ./prisma
-# Dummy URL for build-time generation
-ENV DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
-RUN npx prisma generate
 
 # Copy source code
 COPY . .
@@ -33,25 +28,23 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install OpenSSL (required for Prisma)
-RUN apk add --no-cache openssl
-
 # Copy package files
 COPY package.json package-lock.json ./
 
 # Install only production dependencies
 RUN npm ci --only=production
 
-# Copy Prisma schema and generate client (needed for runtime)
-COPY prisma ./prisma
-# Dummy URL for runtime generation (the client code needs to be generated, connection happens later)
-ENV DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
-RUN npx prisma generate
-
 # Copy built application from builder stage
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./next.config.ts
+
+# Create non-root user for security (best practice)
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
 
 # Expose the application port
 EXPOSE 3000
