@@ -1,7 +1,7 @@
 FROM node:20-slim AS base
 
 # Install dependencies only when needed
-RUN apt-get update -y && apt-get install -y openssl
+RUN apt-get update -y && apt-get install -y openssl ca-certificates
 
 FROM base AS deps
 WORKDIR /app
