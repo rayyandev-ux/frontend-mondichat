@@ -28,26 +28,20 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy package files
-COPY package.json package-lock.json ./
-
-# Install only production dependencies
-RUN npm ci --only=production
-
-# Copy built application from builder stage
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.mjs ./next.config.mjs
-
-# Create non-root user for security (best practice)
+# Don't run as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
-RUN chown -R nextjs:nodejs /app
+
+# Copy necessary files for standalone mode
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
-# Expose the application port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
