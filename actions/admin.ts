@@ -1,7 +1,7 @@
 'use server'
 
 import { createCode } from "@/lib/codes"
-import { deleteUser } from "@/lib/users"
+import { deleteUser, unlinkUser } from "@/lib/users"
 import { revalidatePath } from "next/cache"
 import jwt from 'jsonwebtoken';
 
@@ -37,6 +37,25 @@ export async function deleteUserAction(userId: string) {
     } catch (e: any) {
         console.error("Delete User Action Error:", e)
         return { success: false, error: e.message || "Error al eliminar usuario" }
+    }
+}
+
+export async function unlinkUserAction(userId: string) {
+    try {
+        if (!userId) throw new Error("ID de usuario requerido");
+        
+        await unlinkUser(userId)
+        
+        try {
+            revalidatePath('/admin')
+        } catch (revalError) {
+            console.error("Revalidation Error:", revalError)
+        }
+        
+        return { success: true }
+    } catch (e: any) {
+        console.error("Unlink User Action Error:", e)
+        return { success: false, error: e.message || "Error al desvincular usuario" }
     }
 }
 

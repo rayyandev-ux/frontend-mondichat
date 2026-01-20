@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User as UserIcon, Trash2, Key, Plus, CheckCircle, XCircle, Search, Calendar, Map, Phone, CreditCard, Database, Upload } from 'lucide-react'
+import { User as UserIcon, Trash2, Key, Plus, CheckCircle, XCircle, Search, Calendar, Map, Phone, CreditCard, Database, Upload, Unlink } from 'lucide-react'
 import type { User } from '@/lib/users'
 import type { RegistrationCode } from '@/lib/codes'
-import { generateCodeAction, deleteUserAction, uploadCsvAction } from '@/actions/admin'
+import { generateCodeAction, deleteUserAction, uploadCsvAction, unlinkUserAction } from '@/actions/admin'
 
 interface AdminDashboardClientProps {
     initialUsers: User[];
@@ -53,6 +53,18 @@ export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashbo
             setUsers(users.filter(u => u.id !== userId))
         } else {
             alert("Error al eliminar usuario")
+        }
+    }
+
+    const handleUnlinkUser = async (userId: string) => {
+        if (!confirm("¿Estás seguro de desvincular el WhatsApp de este usuario?")) return;
+        
+        const res = await unlinkUserAction(userId)
+        if (res.success) {
+            setUsers(users.map(u => u.id === userId ? { ...u, whatsappId: undefined } : u))
+            alert("Usuario desvinculado correctamente")
+        } else {
+            alert("Error al desvincular usuario")
         }
     }
 
@@ -185,7 +197,16 @@ export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashbo
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-2">
+                                                {(user as any).whatsappId && (
+                                                    <button 
+                                                        onClick={() => handleUnlinkUser(user.id)}
+                                                        className="text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300 p-2 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-full transition-colors"
+                                                        title="Desvincular WhatsApp"
+                                                    >
+                                                        <Unlink className="h-5 w-5" />
+                                                    </button>
+                                                )}
                                                 <button 
                                                     onClick={() => handleDeleteUser(user.id)}
                                                     className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"

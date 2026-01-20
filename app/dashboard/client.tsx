@@ -5,7 +5,7 @@ import { MessageCircle, Copy, Check } from 'lucide-react'
 import { generateWhatsappCodeAction } from '@/actions/user'
 import { handleSignOut } from '@/actions/login'
 
-export function DashboardClient({ userName }: { userName: string }) {
+export function DashboardClient({ userName, isLinked }: { userName: string, isLinked: boolean }) {
     const [code, setCode] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [copied, setCopied] = useState(false)
@@ -51,42 +51,57 @@ export function DashboardClient({ userName }: { userName: string }) {
                         Vincular WhatsApp
                     </h2>
                     
-                    {!code ? (
-                        <div className="space-y-4">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Para acceder al Agente IA, necesitas vincular tu número de WhatsApp.
+                    {isLinked ? (
+                        <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                            <p className="text-green-800 dark:text-green-300 font-medium flex items-center justify-center gap-2">
+                                <Check className="w-5 h-5" />
+                                Ya vinculado
                             </p>
-                            <button
-                                onClick={handleGenerate}
-                                disabled={loading}
-                                className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors font-medium"
-                            >
-                                {loading ? 'Generando...' : 'Generar Código de Vinculación'}
-                            </button>
+                            <p className="text-sm text-green-700 dark:text-green-400 mt-2">
+                                Tu cuenta ya está conectada a WhatsApp.
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+                                Si deseas desvincularte, contacta con un administrador.
+                            </p>
                         </div>
                     ) : (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Envía este código a nuestro bot de WhatsApp para verificar tu cuenta:
-                            </p>
-                            <div className="relative group">
-                                <div className="p-3 bg-gray-100 dark:bg-gray-900 rounded-md font-mono text-xl tracking-wider text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 break-all">
-                                    {code}
-                                </div>
+                        !code ? (
+                            <div className="space-y-4">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Para acceder al Agente IA, necesitas vincular tu número de WhatsApp.
+                                </p>
                                 <button
-                                    onClick={copyToClipboard}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-indigo-500 bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    title="Copiar"
+                                    onClick={handleGenerate}
+                                    disabled={loading}
+                                    className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors font-medium"
                                 >
-                                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                    {loading ? 'Generando...' : 'Generar Código de Vinculación'}
                                 </button>
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-500 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded text-left">
-                                1. Copia el código.<br/>
-                                2. Abre WhatsApp y busca al contacto del Bot.<br/>
-                                3. Pega y envía el código.
+                        ) : (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Envía este código a nuestro bot de WhatsApp para verificar tu cuenta:
+                                </p>
+                                <div className="relative group">
+                                    <div className="p-3 bg-gray-100 dark:bg-gray-900 rounded-md font-mono text-xl tracking-wider text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 break-all">
+                                        {code}
+                                    </div>
+                                    <button
+                                        onClick={copyToClipboard}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-indigo-500 bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Copiar"
+                                    >
+                                        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-500 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded text-left">
+                                    1. Copia el código.<br/>
+                                    2. Abre WhatsApp y busca al contacto del Bot.<br/>
+                                    3. Pega y envía el código.
+                                </div>
                             </div>
-                        </div>
+                        )
                     )}
                 </div>
 

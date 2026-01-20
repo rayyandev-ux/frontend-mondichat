@@ -70,6 +70,28 @@ export async function deleteUser(userId: string): Promise<void> {
     }
 }
 
+export async function unlinkUser(userId: string): Promise<void> {
+    if (!AUTH_SECRET) throw new Error("AUTH_SECRET missing");
+    
+    // Create Admin Token
+    const token = jwt.sign({
+        role: 'admin',
+        email: 'admin@system'
+    }, AUTH_SECRET);
+
+    const res = await fetch(`${BACKEND_URL}/admin/users/${userId}/unlink`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to unlink user");
+    }
+}
+
 export async function createUser(user: Omit<User, 'id'>): Promise<User> {
     const res = await fetch(`${BACKEND_URL}/auth/register`, {
         method: 'POST',
