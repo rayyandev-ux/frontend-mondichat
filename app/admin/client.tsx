@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { User as UserIcon, Trash2, Key, Plus, CheckCircle, XCircle, Search, Calendar, Map, Phone, CreditCard, Database, Upload, Unlink } from 'lucide-react'
 import type { User } from '@/lib/users'
@@ -13,10 +14,12 @@ interface AdminDashboardClientProps {
 }
 
 export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashboardClientProps) {
+    const searchParams = useSearchParams()
+    const activeTab = searchParams.get('view') || 'users'
+    
     const [users, setUsers] = useState(initialUsers)
     const [codes, setCodes] = useState(initialCodes)
     const [isGenerating, setIsGenerating] = useState(false)
-    const [activeTab, setActiveTab] = useState<'users' | 'codes' | 'database'>('users')
     const [searchTerm, setSearchTerm] = useState('')
     const [uploading, setUploading] = useState(false)
 
@@ -78,39 +81,6 @@ export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashbo
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-3xl font-bold dark:text-white">Panel de Administración</h2>
-                
-                <div className="flex space-x-2 bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm">
-                    <button
-                        onClick={() => setActiveTab('users')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                            activeTab === 'users' 
-                                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' 
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                        }`}
-                    >
-                        Usuarios
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('codes')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                            activeTab === 'codes' 
-                                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' 
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                        }`}
-                    >
-                        Códigos de Registro
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('database')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                            activeTab === 'database' 
-                                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' 
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                        }`}
-                    >
-                        Base de Datos
-                    </button>
-                </div>
             </div>
 
             {activeTab === 'users' && (
@@ -190,7 +160,7 @@ export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashbo
                                                 <div className="flex flex-col">
                                                     <span className="flex items-center gap-1">
                                                         <Calendar className="h-3 w-3" />
-                                                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                                                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString('es-ES') : 'N/A'}
                                                     </span>
                                                     <span className="text-xs text-gray-400 mt-1">
                                                         Code: {user.registrationCode || 'N/A'}
@@ -288,7 +258,7 @@ export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashbo
                                                 {code.usedByUserName || code.usedByUserId || '-'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                {new Date(code.createdAt).toLocaleDateString()} {new Date(code.createdAt).toLocaleTimeString()}
+                                                {new Date(code.createdAt).toLocaleDateString('es-ES')} {new Date(code.createdAt).toLocaleTimeString('es-ES')}
                                             </td>
                                         </tr>
                                     ))
