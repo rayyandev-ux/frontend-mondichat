@@ -92,6 +92,33 @@ export async function unlinkUser(userId: string): Promise<void> {
     }
 }
 
+export async function updateUserRoute(userId: string, route: string): Promise<User> {
+    if (!AUTH_SECRET) throw new Error("AUTH_SECRET missing");
+    if (!route) throw new Error("Ruta requerida");
+    
+    const token = jwt.sign({
+        role: 'admin',
+        email: 'admin@system'
+    }, AUTH_SECRET);
+
+    const res = await fetch(`${BACKEND_URL}/admin/users/${userId}/route`, {
+        method: 'PATCH',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ route })
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update route");
+    }
+
+    const data = await res.json();
+    return data.user;
+}
+
 export async function createUser(user: Omit<User, 'id'>): Promise<User> {
     const res = await fetch(`${BACKEND_URL}/auth/register`, {
         method: 'POST',

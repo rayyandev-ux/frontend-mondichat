@@ -1,7 +1,7 @@
 'use server'
 
 import { createCode } from "@/lib/codes"
-import { deleteUser, unlinkUser } from "@/lib/users"
+import { deleteUser, unlinkUser, updateUserRoute } from "@/lib/users"
 import { revalidatePath } from "next/cache"
 import jwt from 'jsonwebtoken';
 
@@ -56,6 +56,26 @@ export async function unlinkUserAction(userId: string) {
     } catch (e: any) {
         console.error("Unlink User Action Error:", e)
         return { success: false, error: e.message || "Error al desvincular usuario" }
+    }
+}
+
+export async function updateUserRouteAction(userId: string, route: string) {
+    try {
+        if (!userId) throw new Error("ID de usuario requerido");
+        if (!route) throw new Error("Ruta requerida");
+
+        const updatedUser = await updateUserRoute(userId, route)
+
+        try {
+            revalidatePath('/admin')
+        } catch (revalError) {
+            console.error("Revalidation Error:", revalError)
+        }
+
+        return { success: true, user: updatedUser }
+    } catch (e: any) {
+        console.error("Update User Route Action Error:", e)
+        return { success: false, error: e.message || "Error al actualizar ruta" }
     }
 }
 

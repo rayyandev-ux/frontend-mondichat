@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { User as UserIcon, Trash2, Key, Plus, CheckCircle, XCircle, Search, Calendar, Map, Phone, CreditCard, Database, Upload, Unlink } from 'lucide-react'
 import type { User } from '@/lib/users'
 import type { RegistrationCode } from '@/lib/codes'
-import { generateCodeAction, deleteUserAction, uploadCsvAction, unlinkUserAction } from '@/actions/admin'
+import { generateCodeAction, deleteUserAction, uploadCsvAction, unlinkUserAction, updateUserRouteAction } from '@/actions/admin'
 
 interface AdminDashboardClientProps {
     initialUsers: User[];
@@ -22,6 +22,18 @@ export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashbo
     const [isGenerating, setIsGenerating] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     const [uploading, setUploading] = useState(false)
+    const [routes, setRoutes] = useState<string[]>([])
+    const [routeEdits, setRouteEdits] = useState<Record<string, string>>({})
+    const [updatingRoutes, setUpdatingRoutes] = useState<Record<string, boolean>>({})
+
+    useEffect(() => {
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/routes`)
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data)) setRoutes(data)
+          })
+          .catch(() => {})
+    }, [])
 
     const handleUpload = async (formData: FormData) => {
         setUploading(true)
@@ -69,6 +81,28 @@ export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashbo
         } else {
             alert("Error al desvincular usuario")
         }
+    }
+
+    const handleUpdateRoute = async (userId: string) => {
+        const currentUser = users.find(u => u.id === userId)
+        const routeValue = (routeEdits[userId] ?? currentUser?.route ?? '').trim()
+        if (!routeValue) {
+            alert("Ruta requerida")
+            return
+        }
+        setUpdatingRoutes(prev => ({ ...prev, [userId]: true }))
+        const res = await updateUserRouteAction(userId, routeValue)
+        if (res.success && res.user) {
+            setUsers(users.map(u => u.id === userId ? { ...u, route: res.user.route } : u))
+            setRouteEdits(prev => {
+                const next = { ...prev }
+                delete next[userId]
+                return next
+            })
+        } else {
+            alert(res.error || "Error al actualizar ruta")
+        }
+        setUpdatingRoutes(prev => ({ ...prev, [userId]: false }))
     }
 
     const filteredUsers = users.filter(user => 
@@ -151,10 +185,16 @@ export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashbo
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                    <Map className="h-3 w-3 mr-1" />
-                                                    {user.route || 'Sin Ruta'}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <Map className="h-3 w-3 text-blue-600 dark:text-blue-300" />
+                                                    <input
+                                                        list="routes-list"
+                                                        value={routeEdits[user.id] ?? user.route ?? ''}
+                                                        onChange={(e) => setRouteEdits(prev => ({ ...prev, [user.id]: e.target.value }))}
+                                                        className="w-40 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white px-2 py-1"
+                                                        placeholder="Ruta"
+                                                    />
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                 <div className="flex flex-col">
@@ -168,6 +208,14 @@ export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashbo
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleUpdateRoute(user.id)}
+                                                    disabled={!!updatingRoutes[user.id]}
+                                                    className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 p-2 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-full transition-colors disabled:opacity-50"
+                                                    title="Guardar Ruta"
+                                                >
+                                                    <CheckCircle className="h-5 w-5" />
+                                                </button>
                                                 {(user as any).whatsappId && (
                                                     <button 
                                                         onClick={() => handleUnlinkUser(user.id)}
@@ -190,6 +238,11 @@ export function AdminDashboardClient({ initialUsers, initialCodes }: AdminDashbo
                                 )}
                             </tbody>
                         </table>
+                        <datalist id="routes-list">
+                            {routes.map((route, index) => (
+                                <option key={index} value={route} />
+                            ))}
+                        </datalist>
                     </div>
                 </motion.div>
             )}
